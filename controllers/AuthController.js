@@ -35,6 +35,10 @@ export const signup = async (req, res, next) => {
     const user = await User.create({ email, password });
     res.cookie("jwt", createToken(email, user.id), {
       maxAge,
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      domain: "chatserver-xtgi.onrender.com",
     });
     console.log("Signup Cookie", res.cookie);
     return res.status(201).json({
@@ -66,8 +70,12 @@ export const login = async (req, res, next) => {
     }
     res.cookie("jwt", createToken(email, user.id), {
       maxAge,
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      domain: "chatserver-xtgi.onrender.com",
     });
-    console.log("Login Cookie", res.cookie);
+    console.log("Login Cookie", res);
 
     return res.status(200).json({
       user: {
@@ -215,6 +223,10 @@ export const logout = async (req, res, next) => {
   try {
     res.cookie("jwt", "", {
       maxAge: 1,
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      domain: "chatserver-xtgi.onrender.com",
     });
     return res.status(200).send("Loggedout successfully");
   } catch (error) {
