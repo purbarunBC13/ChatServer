@@ -35,10 +35,8 @@ export const signup = async (req, res, next) => {
     const user = await User.create({ email, password });
     res.cookie("jwt", createToken(email, user.id), {
       maxAge,
-      httpOnly: false,
-      secure: false,
-      sameSite: "lax",
     });
+    console.log("Signup Cookie", res.cookie);
     return res.status(201).json({
       user: {
         id: user.id,
@@ -68,10 +66,9 @@ export const login = async (req, res, next) => {
     }
     res.cookie("jwt", createToken(email, user.id), {
       maxAge,
-      httpOnly: false,
-      secure: false,
-      sameSite: "lax",
     });
+    console.log("Login Cookie", res.cookie);
+
     return res.status(200).json({
       user: {
         id: user.id,
@@ -218,9 +215,6 @@ export const logout = async (req, res, next) => {
   try {
     res.cookie("jwt", "", {
       maxAge: 1,
-      httpOnly: false,
-      secure: false,
-      sameSite: "lax",
     });
     return res.status(200).send("Loggedout successfully");
   } catch (error) {
