@@ -94,6 +94,40 @@ const setupSocket = (server) => {
     }
   };
 
+  const sendChannelCallRequest = async ({
+    channelId,
+    userIdentity,
+    userId,
+  }) => {
+    const channel = await Channel.findById(channelId).populate("members admin");
+    const filteredMembers = channel.members.filter(
+      (member) => member._id.toString() !== userId
+    );
+    if (channel && filteredMembers) {
+      filteredMembers.forEach((member) => {
+        const memberSocketId = userSocketMap.get(member._id.toString());
+        console.log(`Sending call request to ${member._id}`);
+        if (memberSocketId) {
+          io.to(memberSocketId).emit("receiveChannelCallRequest", {
+            channelId,
+            userIdentity,
+          });
+        }
+      });
+
+      if (channel.admin._id.toString() !== userId) {
+        const adminSocketId = userSocketMap.get(channel.admin._id.toString());
+        console.log(`Sending call request to ${channel.admin._id}`);
+        if (adminSocketId) {
+          io.to(adminSocketId).emit("receiveChannelCallRequest", {
+            channelId,
+            userIdentity,
+          });
+        }
+      }
+    }
+  };
+
   io.on("connection", (socket) => {
     const userId = socket.handshake.query.userId;
     if (userId) {
@@ -106,6 +140,7 @@ const setupSocket = (server) => {
     socket.on("sendMessage", sendMessage);
     socket.on("send-channel-message", sendChannelMessage);
     socket.on("sendCallRequest", sendCallRequest);
+    socket.on("sendChannelCallRequest", sendChannelCallRequest);
     socket.on("disconnect", () => disconnect(socket));
   });
 };
