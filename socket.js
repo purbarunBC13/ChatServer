@@ -128,6 +128,23 @@ const setupSocket = (server) => {
     }
   };
 
+  const sendTyping = async (recipientId, senderId) => {
+    const recipientSocketId = userSocketMap.get(recipientId);
+    // const senderSocketId = userSocketMap.get(senderId);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("typing", { recipientId, senderId });
+      console.log(`User is typing to recipient: ${recipientId}`);
+    }
+  };
+
+  const stopTyping = async (recipientId, senderId) => {
+    const recipientSocketId = userSocketMap.get(recipientId);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("stop typing", { recipientId, senderId });
+      console.log(`User stopped typing to recipient: ${recipientId}`);
+    }
+  };
+
   io.on("connection", (socket) => {
     const userId = socket.handshake.query.userId;
     if (userId) {
@@ -141,6 +158,14 @@ const setupSocket = (server) => {
     socket.on("send-channel-message", sendChannelMessage);
     socket.on("sendCallRequest", sendCallRequest);
     socket.on("sendChannelCallRequest", sendChannelCallRequest);
+    socket.on("typing", ({ recipientId, senderId }) => {
+      sendTyping(recipientId, senderId);
+    });
+
+    socket.on("stop typing", ({ recipientId, senderId }) => {
+      stopTyping(recipientId, senderId);
+    });
+
     socket.on("disconnect", () => disconnect(socket));
   });
 };
