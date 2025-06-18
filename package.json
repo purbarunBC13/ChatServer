@@ -15,6 +15,7 @@
   "dependencies": {
     "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
+    "chrono-node": "^2.8.3",
     "cloudinary": "^2.5.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -26,6 +27,7 @@
     "mongoose": "^8.7.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "node-cron": "^4.1.0",
     "peer": "^1.0.2",
     "server": "file:",
     "socket.io": "^4.8.0"

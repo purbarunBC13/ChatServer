@@ -1,9 +1,16 @@
 import { Server as SocketIOServer } from "socket.io";
 import Message from "./models/MessegesModel.js";
 import Channel from "./models/ChannelModel.js";
+import * as chrono from "chrono-node";
+import { Event } from "./models/EventModel.js";
+
+let ioInstance = null;
+const userSocketMap = new Map();
+export const getIO = () => ioInstance;
+export const getUserSocketMap = (userId) => userSocketMap.get(userId);
 
 const setupSocket = (server) => {
-  const io = new SocketIOServer(server, {
+  ioInstance = new SocketIOServer(server, {
     cors: {
       origin: process.env.ORIGIN,
       methods: ["GET", "POST"],
@@ -11,7 +18,7 @@ const setupSocket = (server) => {
     },
   });
 
-  const userSocketMap = new Map();
+  const io = ioInstance;
 
   const disconnect = (socket) => {
     for (const [userId, socketId] of userSocketMap.entries()) {
@@ -32,6 +39,28 @@ const setupSocket = (server) => {
       .populate("sender", "id firstName lastName email image color")
       .populate("recipient", "id firstName lastName email image color");
 
+    // ⏰ Smart Scheduling: Parse datetime from message
+    const parsedDate = chrono.parseDate(message.content);
+    if (parsedDate && parsedDate > new Date()) {
+      // Save event to DB
+      await Event.create({
+        userId: message.sender,
+        recipientId: message.recipient,
+        description: message.content,
+        dateTime: parsedDate,
+        createdAt: new Date(),
+      });
+
+      // Notify sender about event creation
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("eventScheduled", {
+          message: message.content,
+          dateTime: parsedDate,
+        });
+      }
+    }
+
+    // 💬 Emit chat message
     if (recipientSocketId) {
       io.to(recipientSocketId).emit("receiveMessage", messageData);
     }
